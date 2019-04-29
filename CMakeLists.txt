@@ -6,14 +6,17 @@ set(plug_sources
     include/constants.h
     include/audiotools.h
     include/delay.h
+    include/WT_Osc.h
+    include/modulation.h
     source/plugfactory.cpp
     source/plugcontroller.cpp
     source/plugprocessor.cpp
     source/delay.cpp
+    source/modulation.cpp
     )
 
 #--- HERE change the target Name for your plug-in (for ex. set(target myDelay))-------
-set(target mydelay)
+set(target mymodulation)
 
 smtg_add_vst3plugin(${target} ${SDK_ROOT} ${plug_sources})
 set_target_properties(${target} PROPERTIES ${SDK_IDE_MYPLUGINS_FOLDER})

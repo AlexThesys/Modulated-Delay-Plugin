@@ -39,36 +39,49 @@
 #include "public.sdk/source/vst/vstparameters.h"
 
 namespace Steinberg {
-namespace MyDelay {
+namespace MyModulation {
 
 // HERE are defined the parameter Ids which are exported to the host
-enum MyDelayParams : Vst::ParamID
+enum MyModulationParams : Vst::ParamID
 {
-    kParamDelayDryWetID = 101,
-    kParamDelayTimeID = 102,
-    kParamDelayFeedbackID = 103,
+    kParamDryWetID = 101,
+    kParamModulationRateID = 102,
+    kParamModulationDepthID = 103,
+    kParamModWaveformID = 104,
+    kParamFeedbackID = 105,
+    kParamChorusOffsetID = 106,
 
-    kBypassID = 104
+    kParamEffectTypeID = 107,
+
+    kBypassID = 108
 };
 
-namespace DelayConst
+namespace ModulationConst
 {
-    static constexpr double DELAY_DRY_WET_MIN = 0.0;
-    static constexpr double DELAY_DRY_WET_MAX = 1.0;
-    static constexpr double DELAY_DRY_WET_DEFAULT = 0.5;
-    static constexpr double DELAY_TIME_MS_MIN = 0.0;
-    static constexpr double DELAY_TIME_MS_MAX = 2000.0;
-    static constexpr double DELAY_TIME_MS_DEFAULT = 80.0;
-    static constexpr double DELAY_FEEDBACK_MIN = -0.95;
-    static constexpr double DELAY_FEEDBACK_MAX = 0.95;
-    static constexpr double DELAY_FEEDBACK_DEFAULT = 0.4;
+    static constexpr double DRY_WET_MIN = 0.0;
+    static constexpr double DRY_WET_MAX = 1.0;
+    static constexpr double DRY_WET_DEFAULT = 0.5;
+    static constexpr double FEEDBACK_MIN = -0.95;
+    static constexpr double FEEDBACK_MAX = 0.95;
+    static constexpr double FEEDBACK_DEFAULT = 0.4;
+    static constexpr double DEPTH_MIN = 0.0;
+    static constexpr double DEPTH_MAX = 1.0;
+    static constexpr double DEPTH_DEFAULT = 0.5;
+    static constexpr double RATE_MIN = 0.02;
+    static constexpr double RATE_MAX = 5.0;
+    static constexpr double RATE_DEFAULT = 0.18;
+    static constexpr double CHRS_OFST_MIN = 5.0;
+    static constexpr double CHRS_OFST_MAX = 35.0;
+    static constexpr double CHRS_OFST_DEFAULT = 5.0;
+    static constexpr int	NUM_WAVEFORMS = 4;
+    static constexpr int	NUM_FX_TYPES = 3;
 };
 
 
 // HERE you have to define new unique class ids: for processor and for controller
 // you can use GUID creator tools like https://www.guidgenerator.com/
-static const FUID MyProcessorUID (0x316a13bd, 0x0fcb405d, 0xb4e7bd73, 0x7b7e8f9d);
-static const FUID MyControllerUID (0x315e2651, 0x34784bcc, 0x8247f272, 0x1796e51a);
+static const FUID MyProcessorUID (0xe2c9d841, 0x22804458, 0xa5e0704a, 0x4366571a);
+static const FUID MyControllerUID (0x7f24ee74, 0x55f14e51, 0xb8853578, 0xfddb071b);
 
 //------------------------------------------------------------------------
 } // namespace HelloWorld

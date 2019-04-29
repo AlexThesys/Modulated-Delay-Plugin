@@ -43,7 +43,7 @@
 //#include "vstgui4/vstgui/plugin-bindings/vst3editor.h"
 
 namespace Steinberg {
-namespace MyDelay {
+namespace MyModulation {
 
 //-----------------------------------------------------------------------------
 class PlugController : public Vst::EditController//, public VST3EditorDelegate

@@ -41,7 +41,7 @@
 #include "pluginterfaces/base/ustring.h"
 
 namespace Steinberg {
-namespace MyDelay {
+namespace MyModulation {
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::initialize (FUnknown* context)
@@ -53,34 +53,64 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
         Vst::Parameter* param;
 
         //-----------------------------------
-        param = new Vst::RangeParameter(USTRING("Dry/Wet"), MyDelayParams::kParamDelayDryWetID,
-                                    USTRING(""), DelayConst::DELAY_DRY_WET_MIN,
-                                                       DelayConst::DELAY_DRY_WET_MAX,
-                                                       DelayConst::DELAY_DRY_WET_DEFAULT);
+        param = new Vst::RangeParameter(USTRING("Dry/Wet"), MyModulationParams::kParamDryWetID,
+                                    USTRING(""), ModulationConst::DRY_WET_MIN,
+                                                       ModulationConst::DRY_WET_MAX,
+                                                       ModulationConst::DRY_WET_DEFAULT);
 
         param->setPrecision(1);
         parameters.addParameter(param);
         //-----------------------------------
-        param = new Vst::RangeParameter(USTRING("Delay Time"), MyDelayParams::kParamDelayTimeID,
-                                    USTRING("ms"), DelayConst::DELAY_TIME_MS_MIN,
-                                                       DelayConst::DELAY_TIME_MS_MAX,
-                                                       DelayConst::DELAY_TIME_MS_DEFAULT);
+        param = new Vst::RangeParameter(USTRING("Modulation Rate"), MyModulationParams::kParamModulationRateID,
+                                    USTRING("Hz"), ModulationConst::RATE_MIN,
+                                                       ModulationConst::RATE_MAX,
+                                                       ModulationConst::RATE_DEFAULT);
+
+        param->setPrecision(2);
+        parameters.addParameter(param);
+        //-----------------------------------
+        param = new Vst::RangeParameter(USTRING("Modulation Depth"), MyModulationParams::kParamModulationDepthID,
+                                    USTRING(""), ModulationConst::DEPTH_MIN,
+                                                       ModulationConst::DEPTH_MAX,
+                                                       ModulationConst::DEPTH_DEFAULT);
+
+        param->setPrecision(2);
+        parameters.addParameter(param);
+        //------------------------------------
+        param = new Vst::StringListParameter(USTRING("Modulation Waveform"), MyModulationParams::kParamModWaveformID);
+        Vst::StringListParameter* strParam = static_cast<Vst::StringListParameter*>(param);
+        strParam->appendString(USTRING("Sine"));	// 0
+        strParam->appendString(USTRING("Saw"));  // 1
+        strParam->appendString(USTRING("Triangle")); // 2
+        strParam->appendString(USTRING("Square")); // 3
+        parameters.addParameter(param);
+        //-----------------------------------
+        param = new Vst::RangeParameter(USTRING("Feedback"), MyModulationParams::kParamFeedbackID,
+                                    USTRING(""), ModulationConst::FEEDBACK_MIN,
+                                                       ModulationConst::FEEDBACK_MAX,
+                                                       ModulationConst::FEEDBACK_DEFAULT);
 
         param->setPrecision(1);
         parameters.addParameter(param);
         //-----------------------------------
-        param = new Vst::RangeParameter(USTRING("Feedback"), MyDelayParams::kParamDelayFeedbackID,
-                                    USTRING(""), DelayConst::DELAY_FEEDBACK_MIN,
-                                                       DelayConst::DELAY_FEEDBACK_MAX,
-                                                       DelayConst::DELAY_FEEDBACK_DEFAULT);
+        param = new Vst::RangeParameter(USTRING("Chorus Offset"), MyModulationParams::kParamChorusOffsetID,
+                                    USTRING("ms"), ModulationConst::CHRS_OFST_MIN,
+                                                       ModulationConst::CHRS_OFST_MAX,
+                                                       ModulationConst::CHRS_OFST_DEFAULT);
 
         param->setPrecision(1);
+        parameters.addParameter(param);
+        //------------------------------------
+        param = new Vst::StringListParameter(USTRING("Effect Type"), MyModulationParams::kParamEffectTypeID);
+        strParam = static_cast<Vst::StringListParameter*>(param);
+        strParam->appendString(USTRING("Flanger"));	// 0
+        strParam->appendString(USTRING("Chorus"));  // 1
+        strParam->appendString(USTRING("Vibrato")); // 2
         parameters.addParameter(param);
         //---------------------------------
         parameters.addParameter (STR16 ("Bypass"), nullptr, 1, 0,
                                  Vst::ParameterInfo::kCanAutomate | Vst::ParameterInfo::kIsBypass,
-                                 MyDelayParams::kBypassID);
-        //------------------------------------
+                                 MyModulationParams::kBypassID);
     }
     return kResultTrue;
 }
@@ -112,23 +142,43 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
     // dry/wet
     if (streamer.readDouble (savedParam) == false)
         return kResultFalse;
-    setParamNormalizedFromFile(MyDelayParams::kParamDelayDryWetID, savedParam);
+    setParamNormalizedFromFile(MyModulationParams::kParamDryWetID, savedParam);
 
-    // time
+    // rate
     if (streamer.readDouble (savedParam) == false)
         return kResultFalse;
-    setParamNormalizedFromFile(MyDelayParams::kParamDelayTimeID, savedParam);
+    setParamNormalizedFromFile(MyModulationParams::kParamModulationRateID, savedParam);
+
+    // depth
+    if (streamer.readDouble (savedParam) == false)
+        return kResultFalse;
+    setParamNormalizedFromFile(MyModulationParams::kParamModulationDepthID, savedParam);
+
+    // depth
+    if (streamer.readDouble (savedParam) == false)
+        return kResultFalse;
+    setParamNormalizedFromFile(MyModulationParams::kParamModWaveformID, savedParam);
 
     // feedback
     if (streamer.readDouble (savedParam) == false)
         return kResultFalse;
-    setParamNormalizedFromFile(MyDelayParams::kParamDelayFeedbackID, savedParam);
+    setParamNormalizedFromFile(MyModulationParams::kParamFeedbackID, savedParam);
+
+    // feedback
+    if (streamer.readDouble (savedParam) == false)
+        return kResultFalse;
+    setParamNormalizedFromFile(MyModulationParams::kParamChorusOffsetID, savedParam);
+
+    // feedback
+    if (streamer.readDouble (savedParam) == false)
+        return kResultFalse;
+    setParamNormalizedFromFile(MyModulationParams::kParamEffectTypeID, savedParam);
 
     // bypass
     int32 bypassState;
     if (streamer.readInt32 (bypassState) == false)
         return kResultFalse;
-    setParamNormalized (MyDelayParams::kBypassID, bypassState ? 1 : 0);
+    setParamNormalized (MyModulationParams::kBypassID, bypassState ? 1 : 0);
 
     return kResultOk;
 }

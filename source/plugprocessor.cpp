@@ -44,15 +44,19 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
 namespace Steinberg {
-namespace MyDelay {
+namespace MyModulation {
 
 void processAudio32(Vst::ProcessData &data, int32 numChannels, PlugProcessor* processor);
 void processAudio64(Vst::ProcessData &data, int32 numChannels, PlugProcessor* processor);
 //-----------------------------------------------------------------------------
-PlugProcessor::PlugProcessor () : m_pDelay(nullptr),
-                                  mDelayDryWet(DelayConst::DELAY_DRY_WET_DEFAULT),
-                                  mDelayTime(DelayConst::DELAY_TIME_MS_DEFAULT),
-                                  mDelayFB(DelayConst::DELAY_FEEDBACK_DEFAULT),
+PlugProcessor::PlugProcessor () : m_pMod(nullptr),
+                                  mDryWet(ModulationConst::DRY_WET_DEFAULT),
+                                  mModRate(ModulationConst::RATE_DEFAULT),
+                                  mModDepth(ModulationConst::DEPTH_DEFAULT),
+                                  mFeedback(ModulationConst::FEEDBACK_DEFAULT),
+                                  mChorusOffset(ModulationConst::CHRS_OFST_DEFAULT),
+                                  mWaveform(0),
+                                  mEffectType(0),
                                   mBypass(false)
 {
 	// register its editor class
@@ -119,21 +123,12 @@ tresult PLUGIN_API PlugProcessor::setActive (TBool state)
     if (state) // Initialize
 	{
 		// Allocate Memory Here
-        m_pDelay = std::make_unique<DelaySIMD>(audio_tools::SAMPLE_RATE);
-        m_pDelay->setOffset(static_cast<const int>(mDelayTime));
-        m_pDelay->setDryWet(static_cast<float>(mDelayDryWet));
-        m_pDelay->setFeedback(static_cast<float>(mDelayFB));
-
-        paramSmoothers.dryWetSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
-                                                                           audio_tools::SMOOTHING,
-                                                                           mDelayDryWet);
-
-        paramSmoothers.timeSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
-                                                                           audio_tools::SMOOTHING,
-                                                                           mDelayTime);
-        paramSmoothers.feedbackSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
-                                                                           audio_tools::SMOOTHING,
-                                                                           mDelayFB);
+        m_pMod = std::make_unique<Modulation>(audio_tools::SAMPLE_RATE, ModulationConst::RATE_DEFAULT);
+        m_pMod->setDryWet(ModulationConst::DRY_WET_DEFAULT);
+        m_pMod->setFeedback(static_cast<float>(ModulationConst::FEEDBACK_DEFAULT));
+        m_pMod->setModDepth(ModulationConst::DEPTH_DEFAULT);
+        m_pMod->setChorOffset(ModulationConst::CHRS_OFST_DEFAULT);
+        m_pMod->setEffectType(FLANGER, mDryWet, mFeedback);
 
         m_isSampleSize64 = (processSetup.symbolicSampleSize == Vst::kSample64);
         if (processSetup.symbolicSampleSize == Vst::kSample64) {
@@ -170,34 +165,61 @@ tresult PLUGIN_API PlugProcessor::process (Vst::ProcessData& data)
 				int32 numPoints = paramQueue->getPointCount ();
 				switch (paramQueue->getParameterId ())
 				{
-                    case MyDelayParams::kParamDelayDryWetID :
+                    case MyModulationParams::kParamDryWetID :
 						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
 						    kResultTrue)
-                            mDelayDryWet = paramSmoothers.dryWetSmoother.smoothParam(
-                                        audio_tools::scaleRange<double>(DelayConst::DELAY_DRY_WET_MAX,
-                                                                      DelayConst::DELAY_DRY_WET_MIN,
-                                                                      value));
-                            m_pDelay->setDryWet(static_cast<float>(mDelayDryWet));
+                            mDryWet = audio_tools::scaleRange<double>(ModulationConst::DRY_WET_MAX,
+                                                                      ModulationConst::DRY_WET_MIN,
+                                                                      value);
+                            m_pMod->setDryWet(static_cast<float>(mDryWet));
                         break;
-                    case MyDelayParams::kParamDelayTimeID :
+                    case MyModulationParams::kParamModulationRateID :
                         if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                            mDelayTime = paramSmoothers.timeSmoother.smoothParam(
-                                        audio_tools::scaleRange<double>(DelayConst::DELAY_TIME_MS_MAX,
-                                                                      DelayConst::DELAY_TIME_MS_MIN,
-                                                                      value));
-                            m_pDelay->setOffset(mDelayTime);
+                            mModRate = audio_tools::scaleRange<double>(ModulationConst::RATE_MAX,
+                                                                      ModulationConst::RATE_MIN,
+                                                                      value);
+                            m_pMod->setLfoFreq(mModRate);
                         break;
-                    case MyDelayParams::kParamDelayFeedbackID :
+                    case MyModulationParams::kParamModulationDepthID :
                         if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                            mDelayFB = paramSmoothers.feedbackSmoother.smoothParam(
-                                        audio_tools::scaleRange<double>(DelayConst::DELAY_FEEDBACK_MAX,
-                                                                      DelayConst::DELAY_FEEDBACK_MIN,
-                                                                      value));
-                            m_pDelay->setFeedback(static_cast<float>(mDelayFB));
+                            mModDepth = audio_tools::scaleRange<double>(ModulationConst::DEPTH_MAX,
+                                                                      ModulationConst::DEPTH_MIN,
+                                                                      value);
+                            m_pMod->setModDepth(mModDepth);
                         break;
-                    case MyDelayParams::kBypassID :
+                    case MyModulationParams::kParamModWaveformID :
+                    if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+                            kResultTrue)
+                        mWaveform = std::min<int8>((int8)(ModulationConst::NUM_WAVEFORMS * value),
+                                                      ModulationConst::NUM_WAVEFORMS - 1);
+                        m_pMod->setWaveform(mWaveform);
+                    break;
+                    case MyModulationParams::kParamFeedbackID :
+                        if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+                            kResultTrue)
+                            mFeedback = audio_tools::scaleRange<double>(ModulationConst::FEEDBACK_MAX,
+                                                                      ModulationConst::FEEDBACK_MIN,
+                                                                      value);
+                            m_pMod->setFeedback(static_cast<float>(mFeedback));
+                        break;
+                    case MyModulationParams::kParamChorusOffsetID :
+                        if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+                            kResultTrue)
+                            mChorusOffset = audio_tools::scaleRange<double>(ModulationConst::CHRS_OFST_MAX,
+                                                                      ModulationConst::CHRS_OFST_MIN,
+                                                                      value);
+                            m_pMod->setChorOffset(static_cast<double>(mChorusOffset));
+                        break;
+                    case MyModulationParams::kParamEffectTypeID :
+                    if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+                            kResultTrue)
+                        mEffectType = std::min<int8>((int8)(ModulationConst::NUM_FX_TYPES * value),
+                                                      ModulationConst::NUM_FX_TYPES - 1);
+                        m_pMod->setEffectType(mEffectType, mDryWet, mFeedback);
+                    break;
+                    case MyModulationParams::kBypassID :
 						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
 						    kResultTrue)
                             mBypass = (value > 0.5);
@@ -247,15 +269,32 @@ tresult PLUGIN_API PlugProcessor::setState (IBStream* state)
 // dry/wet
     if (streamer.readDouble(savedParam) == false)
 		return kResultFalse;
-    mDelayDryWet = savedParam;
-// time
+    mDryWet = savedParam;
+// rate
     if (streamer.readDouble(savedParam) == false)
         return kResultFalse;
-    mDelayTime = savedParam;
+    mModRate = savedParam;
+// rate
+    if (streamer.readDouble(savedParam) == false)
+        return kResultFalse;
+    mModDepth = savedParam;
+// Waveform type
+    int8 savedParam8 = 0;
+    if (streamer.readInt8(savedParam8) == false)
+        return kResultFalse;
+    mWaveform = savedParam8;
 // feedback
     if (streamer.readDouble(savedParam) == false)
         return kResultFalse;
-    mDelayFB = savedParam;
+    mFeedback = savedParam;
+// chorusOffset
+    if (streamer.readDouble(savedParam) == false)
+        return kResultFalse;
+    mChorusOffset = savedParam;
+// Effect type
+    if (streamer.readInt8(savedParam8) == false)
+        return kResultFalse;
+    mWaveform = savedParam8;
 // bypass
 	int32 bypassState;
 	if (streamer.readInt32 (bypassState) == false)
@@ -271,9 +310,13 @@ tresult PLUGIN_API PlugProcessor::getState (IBStream* state)
 	// here we need to save the model (preset or project)
 
 	IBStreamer streamer (state, kLittleEndian);
-    streamer.writeDouble(mDelayDryWet);
-    streamer.writeDouble(mDelayTime);
-    streamer.writeDouble(mDelayFB);
+    streamer.writeDouble(mDryWet);
+    streamer.writeDouble(mModRate);
+    streamer.writeDouble(mModDepth);
+    streamer.writeInt8(mWaveform);
+    streamer.writeDouble(mFeedback);
+    streamer.writeDouble(mChorusOffset);
+    streamer.writeInt8(mEffectType);
     streamer.writeInt32 (mBypass ? 1 : 0);
 
     return kResultOk;
@@ -306,21 +349,13 @@ void processAudio64(Vst::ProcessData &data, int32 numChannels, PlugProcessor* pr
 template<typename FloatType>
 void PlugProcessor::processAudio(FloatType *in, FloatType *out, int numSamples, int ch)
 {
-    for (int32 sample = 0; sample < numSamples; sample+=4)
+    for (int32 sample = 0; sample < numSamples; ++sample)
     {
-        alignas (16) float buffer[4];
+        float buffer = static_cast<float>(in[sample]);
 
-        buffer[0] = static_cast<float>(in[sample]);
-        buffer[1] = static_cast<float>(in[sample+1]);
-        buffer[2] = static_cast<float>(in[sample+2]);
-        buffer[3] = static_cast<float>(in[sample+3]);
+        m_pMod->update(&buffer, ch);
 
-        m_pDelay->updateDelay(buffer, ch);
-
-        out[sample] = static_cast<FloatType>(buffer[0]);
-        out[sample+1] = static_cast<FloatType>(buffer[1]);
-        out[sample+2] = static_cast<FloatType>(buffer[2]);
-        out[sample+3] = static_cast<FloatType>(buffer[3]);
+        out[sample] = static_cast<FloatType>(buffer);
     }
 }
 

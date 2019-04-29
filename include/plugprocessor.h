@@ -37,7 +37,7 @@
 #pragma once
 
 #include "public.sdk/source/vst/vstaudioeffect.h"
-#include "delay.h"
+#include "modulation.h"
 #include "audiotools.h"
 #include <functional>
 #include <cassert>
@@ -45,7 +45,7 @@
 #include "public.sdk/samples/vst/common/logscale.h"
 
 namespace Steinberg {
-namespace MyDelay {
+namespace MyModulation {
 
 //-----------------------------------------------------------------------------
 class PlugProcessor : public Vst::AudioEffect
@@ -75,24 +75,16 @@ public:
     void processAudio(FloatType* in, FloatType* out, int numSamples, int ch);
 
 protected:
-    typedef struct
-    {
-       audio_tools::ParamSmoothing<double> dryWetSmoother;
-       audio_tools::ParamSmoothing<double> timeSmoother;
-       audio_tools::ParamSmoothing<double> feedbackSmoother;
-    } ParamSmoothers;
-    ParamSmoothers paramSmoothers;
-    std::unique_ptr<DelaySIMD> m_pDelay;
-
    //--------------------------
-    Vst::ParamValue mDelayDryWet;
-    Vst::ParamValue mDelayTime;
-    Vst::ParamValue mDelayFB;
+    std::unique_ptr<Modulation> m_pMod;
+    Vst::ParamValue mDryWet, mModRate, mModDepth,
+                    mFeedback, mChorusOffset;
+    int8 mWaveform, mEffectType;
     bool mBypass;
     bool m_isSampleSize64;
     //----------------------------
 private:
-    char padding[6];
+    char padding[4];
     using ProcFunc = void(*)(Vst::ProcessData& data, int32 numChannels, PlugProcessor* processor);
     typedef  void(*BypassFunc)(Vst::ProcessData& data, int32 numChannels);
     ProcFunc procFunc;
