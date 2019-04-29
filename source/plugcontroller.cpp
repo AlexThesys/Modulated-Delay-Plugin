@@ -77,13 +77,14 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
         param->setPrecision(2);
         parameters.addParameter(param);
         //------------------------------------
-        param = new Vst::StringListParameter(USTRING("Modulation Waveform"), MyModulationParams::kParamModWaveformID);
+        param = new Vst::StringListParameter(USTRING("Modulation Waveform"), MyModulationParams::kParamModWaveformID,
+                                             nullptr, Vst::ParameterInfo::kIsList);
         Vst::StringListParameter* strParam = static_cast<Vst::StringListParameter*>(param);
         strParam->appendString(USTRING("Sine"));	// 0
         strParam->appendString(USTRING("Saw"));  // 1
         strParam->appendString(USTRING("Triangle")); // 2
         strParam->appendString(USTRING("Square")); // 3
-        parameters.addParameter(param);
+        parameters.addParameter(strParam);
         //-----------------------------------
         param = new Vst::RangeParameter(USTRING("Feedback"), MyModulationParams::kParamFeedbackID,
                                     USTRING(""), ModulationConst::FEEDBACK_MIN,
@@ -101,12 +102,13 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
         param->setPrecision(1);
         parameters.addParameter(param);
         //------------------------------------
-        param = new Vst::StringListParameter(USTRING("Effect Type"), MyModulationParams::kParamEffectTypeID);
+        param = new Vst::StringListParameter(USTRING("Effect Type"), MyModulationParams::kParamEffectTypeID,
+                                             nullptr, Vst::ParameterInfo::kIsList);
         strParam = static_cast<Vst::StringListParameter*>(param);
         strParam->appendString(USTRING("Flanger"));	// 0
         strParam->appendString(USTRING("Chorus"));  // 1
         strParam->appendString(USTRING("Vibrato")); // 2
-        parameters.addParameter(param);
+        parameters.addParameter(strParam);
         //---------------------------------
         parameters.addParameter (STR16 ("Bypass"), nullptr, 1, 0,
                                  Vst::ParameterInfo::kCanAutomate | Vst::ParameterInfo::kIsBypass,

@@ -294,7 +294,7 @@ tresult PLUGIN_API PlugProcessor::setState (IBStream* state)
 // Effect type
     if (streamer.readInt8(savedParam8) == false)
         return kResultFalse;
-    mWaveform = savedParam8;
+    mEffectType = savedParam8;
 // bypass
 	int32 bypassState;
 	if (streamer.readInt32 (bypassState) == false)
