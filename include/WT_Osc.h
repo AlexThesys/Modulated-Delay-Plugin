@@ -34,12 +34,11 @@ class WT_Osc
     static constexpr size_t size_mask = SIZE - 1;
     int32_t incr_i;
     float incr_f, incr_f_accum[2];
-    size_t readIndex[2], quadPhaseReadIndex[2];
+    size_t readIndex[2];
     int32_t invert;
 
-    void reset();
+    void reset() noexcept;
     void makeUnipolar(float*) noexcept;
-    void makeUnipolar(float*, float*) noexcept;
 public:
     WT_Osc(const double);
     WT_Osc(const double, const int32_t numHarmonics);   // numHarmonics = 5
@@ -48,20 +47,32 @@ public:
     void changeWaveform(const int) noexcept;
     void changeFreq(const double) noexcept;
     void generate(float*, const int) noexcept;
-    void generate(float*, float*, const int) noexcept;
+    void generateQuad(float*, const int) noexcept;
     void generateUnipolar(float*, const int) noexcept;
-    void generateUnipolar(float*, float*, const int) noexcept;
+    void generateQuadUnipolar(float*, const int) noexcept;
     void invertPhase() { invert ^= 0x80000000; }
+    void setQuadPhase() noexcept;
+    void resetPhase() noexcept;
 };
 
 template <size_t SIZE>
-inline void WT_Osc<SIZE>::reset()
+inline void WT_Osc<SIZE>::reset() noexcept
 {
     memset(readIndex, 0, 2*sizeof(size_t));
-    constexpr size_t quaterSize = static_cast<size_t>(static_cast<double>(SIZE)* 0.25);
-    quadPhaseReadIndex[0] = quaterSize;
-    quadPhaseReadIndex[1] = quaterSize;
     memset(incr_f_accum, 0, 2*sizeof(float));
+}
+
+template<size_t SIZE>
+inline void WT_Osc<SIZE>::setQuadPhase() noexcept
+{
+    constexpr size_t quaterSize = static_cast<size_t>(static_cast<double>(SIZE)* 0.25);
+    readIndex[1] = (readIndex[0] + quaterSize) & size_mask;
+}
+
+template<size_t SIZE>
+inline void WT_Osc<SIZE>::resetPhase() noexcept
+{
+    readIndex[1] = readIndex[0];
 }
 
 template <size_t SIZE>
@@ -69,15 +80,6 @@ inline void WT_Osc<SIZE>::makeUnipolar(float* buff) noexcept
 {
    *buff *= 0.5f;
    *buff += 0.5f;
-}
-
-template <size_t SIZE>
-inline void WT_Osc<SIZE>::makeUnipolar(float* buff, float* qbuff) noexcept
-{
-   *buff *= 0.5f;
-   *buff += 0.5f;
-   *qbuff *= 0.5f;
-   *qbuff += 0.5f;
 }
 
 template <size_t SIZE>
@@ -237,10 +239,9 @@ void WT_Osc<SIZE>::generate(float* buffer, const int ch) noexcept
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::generate(float* buffer, float* qBuffer, const int ch) noexcept
+void WT_Osc<SIZE>::generateQuad(float* buffer, const int ch) noexcept
 {
-    size_t readIndexNext = (readIndex[ch] +1) & size_mask;
-    size_t quadPhaseReadIndexNext = (quadPhaseReadIndex[ch] +1) & size_mask;
+    size_t readIndexNext = (readIndex[ch] + 1) & size_mask;	//can be [ch][0]
 
     f_int32 fi32;
     fi32.f = linearInterp(p_wTable->at(readIndex[ch]),
@@ -249,19 +250,12 @@ void WT_Osc<SIZE>::generate(float* buffer, float* qBuffer, const int ch) noexcep
     fi32.i32 ^= invert;
     *buffer = fi32.f;
 
-    fi32.f = linearInterp(p_wTable->at(quadPhaseReadIndex[ch]),
-                                p_wTable->at(quadPhaseReadIndexNext),
-                                incr_f_accum[ch]);
-    fi32.i32 ^= invert;
-    *qBuffer = fi32.f;
-
     // check this part (its to wrap without branching)
     incr_f_accum[ch] += incr_f;
     int32_t incr_i_accum = std::floor(incr_f_accum[ch]);
     incr_f_accum[ch] -= static_cast<float>(incr_i_accum);
 
     readIndex[ch] = (readIndex[ch] + incr_i + incr_i_accum) & size_mask;
-    quadPhaseReadIndex[ch] = (quadPhaseReadIndex[ch] + incr_i + incr_i_accum) & size_mask;
 }
 
 template<size_t SIZE>
@@ -272,9 +266,10 @@ inline void WT_Osc<SIZE>::generateUnipolar(float* buffer, const int ch) noexcept
 }
 
 template<size_t SIZE>
-inline void WT_Osc<SIZE>::generateUnipolar(float* buffer, float* qBuffer, const int ch) noexcept
+inline void WT_Osc<SIZE>::generateQuadUnipolar(float* buffer, const int ch) noexcept
 {
-    generate(buffer, qBuffer, ch);
-    makeUnipolar(buffer, qBuffer);
+    generateQuad(buffer, ch);
+    makeUnipolar(buffer);
 }
+
 

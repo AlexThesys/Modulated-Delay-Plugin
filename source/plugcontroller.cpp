@@ -84,7 +84,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
         strParam->appendString(USTRING("Saw"));  // 1
         strParam->appendString(USTRING("Triangle")); // 2
         strParam->appendString(USTRING("Square")); // 3
-        parameters.addParameter(strParam);
+        parameters.addParameter(param);
         //-----------------------------------
         param = new Vst::RangeParameter(USTRING("Feedback"), MyModulationParams::kParamFeedbackID,
                                     USTRING(""), ModulationConst::FEEDBACK_MIN,
@@ -108,7 +108,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
         strParam->appendString(USTRING("Flanger"));	// 0
         strParam->appendString(USTRING("Chorus"));  // 1
         strParam->appendString(USTRING("Vibrato")); // 2
-        parameters.addParameter(strParam);
+        parameters.addParameter(param);
         //---------------------------------
         parameters.addParameter (STR16 ("Bypass"), nullptr, 1, 0,
                                  Vst::ParameterInfo::kCanAutomate | Vst::ParameterInfo::kIsBypass,

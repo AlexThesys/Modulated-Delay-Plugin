@@ -24,6 +24,7 @@ public:
     void setLfoFreq(const double) noexcept;
     void setChorOffset(const double) noexcept;
     void setModDepth(const double modDepth) noexcept;
+    void toggleQuadPhase(bool) noexcept;
 };
 
 inline void Modulation::setDryWet(const float dw) noexcept
@@ -54,6 +55,11 @@ inline void Modulation::setChorOffset(const double chrsOffst) noexcept
 inline void Modulation::setModDepth(const double modDepth) noexcept
 {
     m_modDepth = static_cast<float>(modDepth);
+}
+
+inline void Modulation::toggleQuadPhase(bool onOff) noexcept
+{
+    onOff ? m_pLFO->setQuadPhase() : m_pLFO->resetPhase();
 }
 
 inline void Modulation::calculateDelayOffset(const int ch) noexcept
