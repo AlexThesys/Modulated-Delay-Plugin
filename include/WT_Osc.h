@@ -40,16 +40,16 @@ class WT_Osc
     void reset() noexcept;
     void makeUnipolar(float*) noexcept;
 public:
-    WT_Osc(const double);
-    WT_Osc(const double, const int32_t numHarmonics);   // numHarmonics = 5
+    WT_Osc(double);
+    WT_Osc(double, const int32_t numHarmonics);   // numHarmonics = 5
     ~WT_Osc();
-    void changeWaveform(const Waveform) noexcept;
-    void changeWaveform(const int) noexcept;
-    void changeFreq(const double) noexcept;
-    void generate(float*, const int) noexcept;
-    void generateQuad(float*, const int) noexcept;
-    void generateUnipolar(float*, const int) noexcept;
-    void generateQuadUnipolar(float*, const int) noexcept;
+    void changeWaveform(Waveform) noexcept;
+    void changeWaveform(int) noexcept;
+    void changeFreq(double) noexcept;
+    void generate(float*, int) noexcept;
+    void generateQuad(float*, int) noexcept;
+    void generateUnipolar(float*, int) noexcept;
+    void generateQuadUnipolar(float*, int) noexcept;
     void invertPhase() { invert ^= 0x80000000; }
     void setQuadPhase() noexcept;
     void resetPhase() noexcept;
@@ -83,7 +83,7 @@ inline void WT_Osc<SIZE>::makeUnipolar(float* buff) noexcept
 }
 
 template <size_t SIZE>
-WT_Osc<SIZE>::WT_Osc(const double freq) : invert(0)
+WT_Osc<SIZE>::WT_Osc(double freq) : invert(0)
 {
     reset();
     wTables = new WTables<SIZE>();
@@ -120,7 +120,7 @@ WT_Osc<SIZE>::WT_Osc(const double freq) : invert(0)
 }
 
 template <size_t SIZE>
-WT_Osc<SIZE>::WT_Osc(const double freq, const int32_t numHarmonics) : invert(0)
+WT_Osc<SIZE>::WT_Osc(double freq, int32_t numHarmonics) : invert(0)
 {
     reset();
     wTables = new WTables<SIZE>();
@@ -177,7 +177,7 @@ inline WT_Osc<SIZE>::~WT_Osc(){
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::changeWaveform(const Waveform wf) noexcept
+void WT_Osc<SIZE>::changeWaveform(Waveform wf) noexcept
 {
     if (wf == Waveform::SINE)
         p_wTable = &wTables->Sin;
@@ -190,7 +190,7 @@ void WT_Osc<SIZE>::changeWaveform(const Waveform wf) noexcept
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::changeWaveform(const int wf) noexcept
+void WT_Osc<SIZE>::changeWaveform(int wf) noexcept
 {
     switch(wf){
     case static_cast<int>(Waveform::SINE) :
@@ -211,7 +211,7 @@ void WT_Osc<SIZE>::changeWaveform(const int wf) noexcept
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::changeFreq(const double freq) noexcept
+void WT_Osc<SIZE>::changeFreq(double freq) noexcept
 {
     float incr = static_cast<float>(SIZE) * freq / static_cast<float>(audio_tools::SAMPLE_RATE);
     incr_i = std::floor(incr);
@@ -219,7 +219,7 @@ void WT_Osc<SIZE>::changeFreq(const double freq) noexcept
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::generate(float* buffer, const int ch) noexcept
+void WT_Osc<SIZE>::generate(float* buffer, int ch) noexcept
 {
     size_t readIndexNext = (readIndex[ch] +1) & size_mask;
 
@@ -239,7 +239,7 @@ void WT_Osc<SIZE>::generate(float* buffer, const int ch) noexcept
 }
 
 template <size_t SIZE>
-void WT_Osc<SIZE>::generateQuad(float* buffer, const int ch) noexcept
+void WT_Osc<SIZE>::generateQuad(float* buffer, int ch) noexcept
 {
     size_t readIndexNext = (readIndex[ch] + 1) & size_mask;	//can be [ch][0]
 
@@ -259,14 +259,14 @@ void WT_Osc<SIZE>::generateQuad(float* buffer, const int ch) noexcept
 }
 
 template<size_t SIZE>
-inline void WT_Osc<SIZE>::generateUnipolar(float* buffer, const int ch) noexcept
+inline void WT_Osc<SIZE>::generateUnipolar(float* buffer, int ch) noexcept
 {
     generate(buffer, ch);
     makeUnipolar(buffer);
 }
 
 template<size_t SIZE>
-inline void WT_Osc<SIZE>::generateQuadUnipolar(float* buffer, const int ch) noexcept
+inline void WT_Osc<SIZE>::generateQuadUnipolar(float* buffer, int ch) noexcept
 {
     generateQuad(buffer, ch);
     makeUnipolar(buffer);

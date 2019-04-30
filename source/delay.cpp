@@ -1,6 +1,6 @@
 #include "../include/delay.h"
 
-DelayFractional::DelayFractional(const double sr) : extFB(0.0f)
+DelayFractional::DelayFractional(double sr) : extFB(0.0f)
 {
     delay_buff_size = findNextPow2(static_cast<size_t>(sr*2.0));	// sr*2 = 2 sec
     delay_buff_mask = delay_buff_size - 1;
@@ -11,7 +11,7 @@ DelayFractional::DelayFractional(const double sr) : extFB(0.0f)
     memset(delayFraction, 0, sizeof (float)*2);
 }
 
-void DelayFractional::updateDelay(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelay(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
@@ -22,7 +22,7 @@ void DelayFractional::updateDelay(float* buffer, const int ch) noexcept
     updateIndices(ch);
 }
 
-void DelayFractional::updateDelayCrossFB(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelayCrossFB(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
@@ -33,7 +33,7 @@ void DelayFractional::updateDelayCrossFB(float* buffer, const int ch) noexcept
     updateIndices(ch);
 }
 
-void DelayFractional::updateDelayExtFB(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelayExtFB(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
