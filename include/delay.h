@@ -15,9 +15,9 @@ class DelayFractional
     size_t delay_buff_size, delay_buff_mask;
     float delayFraction[2];
     float extFB;
-    size_t ms2samples(double, float&) noexcept;
+    static size_t ms2samples(double, float&) noexcept;
     template<typename Width>
-    Width findNextPow2(Width v) const noexcept;
+    static Width findNextPow2(Width v) noexcept;
     float linearInterp(float, float, float&);
     void updateIndices(int) noexcept;
     void calculateYn(float, float&, int) noexcept;
@@ -59,7 +59,7 @@ inline size_t DelayFractional::ms2samples(double ms, float& dFraction) noexcept
 }
 
 template<typename Width>
-Width DelayFractional::findNextPow2(Width v) const noexcept
+Width DelayFractional::findNextPow2(Width v) noexcept
 {
     --v;
     for (uint32_t i = 1, maxShift = sizeof (Width) << 3; i <= maxShift; i = i << 1){
