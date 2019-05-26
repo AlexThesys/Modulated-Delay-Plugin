@@ -123,12 +123,13 @@ tresult PLUGIN_API PlugProcessor::setActive (TBool state)
     if (state) // Initialize
 	{
 		// Allocate Memory Here
-        m_pMod = std::make_unique<Modulation>(audio_tools::SAMPLE_RATE, ModulationConst::RATE_DEFAULT);
-        m_pMod->setDryWet(ModulationConst::DRY_WET_DEFAULT);
-        m_pMod->setFeedback(static_cast<float>(ModulationConst::FEEDBACK_DEFAULT));
-        m_pMod->setModDepth(ModulationConst::DEPTH_DEFAULT);
-        m_pMod->setChorOffset(ModulationConst::CHRS_OFST_DEFAULT);
-        m_pMod->setEffectType(FLANGER, mDryWet, mFeedback);
+        m_pMod = std::make_unique<Modulation>(audio_tools::SAMPLE_RATE, mModRate);
+        m_pMod->setDryWet(static_cast<float>(mDryWet));
+        m_pMod->setFeedback(static_cast<float>(mFeedback));
+        m_pMod->setModDepth(mModDepth);
+        m_pMod->setChorOffset(mChorusOffset);
+        m_pMod->setEffectType(mEffectType, mDryWet, mFeedback);
+        m_pMod->setWaveform(mWaveform);
 
         m_isSampleSize64 = (processSetup.symbolicSampleSize == Vst::kSample64);
         if (processSetup.symbolicSampleSize == Vst::kSample64) {
@@ -192,7 +193,7 @@ tresult PLUGIN_API PlugProcessor::process (Vst::ProcessData& data)
                     case MyModulationParams::kParamModWaveformID :
                     if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                        mWaveform = std::min<int8>((int8)(ModulationConst::NUM_WAVEFORMS * value),
+                        mWaveform = std::min<int8>(static_cast<int8>(ModulationConst::NUM_WAVEFORMS * value),
                                                       ModulationConst::NUM_WAVEFORMS - 1);
                         m_pMod->setWaveform(mWaveform);
                     break;
@@ -210,12 +211,12 @@ tresult PLUGIN_API PlugProcessor::process (Vst::ProcessData& data)
                             mChorusOffset = audio_tools::scaleRange<double>(ModulationConst::CHRS_OFST_MAX,
                                                                       ModulationConst::CHRS_OFST_MIN,
                                                                       value);
-                            m_pMod->setChorOffset(static_cast<double>(mChorusOffset));
+                            m_pMod->setChorOffset(mChorusOffset);
                         break;
                     case MyModulationParams::kParamEffectTypeID :
                     if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                        mEffectType = std::min<int8>((int8)(ModulationConst::NUM_FX_TYPES * value),
+                        mEffectType = std::min<int8>(static_cast<int8>(ModulationConst::NUM_FX_TYPES * value),
                                                       ModulationConst::NUM_FX_TYPES - 1);
                         m_pMod->setEffectType(mEffectType, mDryWet, mFeedback);
                     break;
