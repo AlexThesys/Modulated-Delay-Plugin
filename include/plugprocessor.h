@@ -76,7 +76,7 @@ public:
 
 protected:
    //--------------------------
-    std::unique_ptr<Modulation> m_pMod;
+    std::unique_ptr<ModFilter> m_pMod;
     Vst::ParamValue mDryWet, mModRate, mModDepth,
                     mFeedback, mChorusOffset;
     int8 mWaveform, mEffectType;

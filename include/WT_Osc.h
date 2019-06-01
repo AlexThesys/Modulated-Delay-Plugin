@@ -47,9 +47,7 @@ public:
     void changeWaveform(int) noexcept;
     void changeFreq(double) noexcept;
     void generate(float*, int) noexcept;
-    void generateQuad(float*, int) noexcept;
     void generateUnipolar(float*, int) noexcept;
-    void generateQuadUnipolar(float*, int) noexcept;
     void invertPhase() { invert ^= 0x80000000; }
     void setQuadPhase() noexcept;
     void resetPhase() noexcept;
@@ -238,38 +236,9 @@ void WT_Osc<SIZE>::generate(float* buffer, int ch) noexcept
     readIndex[ch] = (readIndex[ch] + incr_i + incr_i_accum) & size_mask;
 }
 
-template <size_t SIZE>
-void WT_Osc<SIZE>::generateQuad(float* buffer, int ch) noexcept
-{
-    size_t readIndexNext = (readIndex[ch] + 1) & size_mask;	//can be [ch][0]
-
-    f_int32 fi32;
-    fi32.f = linearInterp(p_wTable->at(readIndex[ch]),
-                                p_wTable->at(readIndexNext),
-                                incr_f_accum[ch]);
-    fi32.i32 ^= invert;
-    *buffer = fi32.f;
-
-    // check this part (its to wrap without branching)
-    incr_f_accum[ch] += incr_f;
-    int32_t incr_i_accum = std::floor(incr_f_accum[ch]);
-    incr_f_accum[ch] -= static_cast<float>(incr_i_accum);
-
-    readIndex[ch] = (readIndex[ch] + incr_i + incr_i_accum) & size_mask;
-}
-
 template<size_t SIZE>
 inline void WT_Osc<SIZE>::generateUnipolar(float* buffer, int ch) noexcept
 {
     generate(buffer, ch);
     makeUnipolar(buffer);
 }
-
-template<size_t SIZE>
-inline void WT_Osc<SIZE>::generateQuadUnipolar(float* buffer, int ch) noexcept
-{
-    generateQuad(buffer, ch);
-    makeUnipolar(buffer);
-}
-
-
