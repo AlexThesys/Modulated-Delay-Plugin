@@ -123,7 +123,7 @@ tresult PLUGIN_API PlugProcessor::setActive (TBool state)
     if (state) // Initialize
 	{
 		// Allocate Memory Here
-        m_pMod = std::make_unique<ModFilter>(audio_tools::SAMPLE_RATE, mModRate);
+        m_pMod = std::make_unique<Modulation>(audio_tools::SAMPLE_RATE, mModRate);
         m_pMod->setDryWet(static_cast<float>(mDryWet));
         m_pMod->setFeedback(static_cast<float>(mFeedback));
         m_pMod->setModDepth(mModDepth);

@@ -1,18 +1,18 @@
 #include "../include/modulation.h"
 
-ModFilter::ModFilter(const double sr, const double freq)
+Modulation::Modulation(const double sr, const double freq)
 {
     m_pDelay = std::make_unique<DelayFractional>(sr);
     m_pLFO = std::make_unique<WT_Osc<1024>>(freq);
 }
 
-void ModFilter::update(float* buffer, const int ch) noexcept
+void Modulation::update(float* buffer, const int ch) noexcept
 {
     calculateDelayOffset(ch);
     m_pDelay->updateDelay(buffer, ch);
 }
 
-void ModFilter::setEffectType(const int fxT, const double dw, const double fb) noexcept
+void Modulation::setEffectType(const int fxT, const double dw, const double fb) noexcept
 {
     switch (fxT) {
         case FLANGER :

@@ -7,14 +7,14 @@
 enum FxType {FLANGER, VIBRATO, CHORUS};
 union F_I_32 {float f; int32_t i;};
 
-class ModFilter
+class Modulation
 {
     std::unique_ptr<DelayFractional> m_pDelay;
     std::unique_ptr<WT_Osc<1024>> m_pLFO;
     float m_deltaDelayTime, m_chorusOffset, m_modDepth;
     int32_t m_chorusMask = 0x0;
 public:
-    ModFilter(const double sr, const double freq);
+    Modulation(const double sr, const double freq);
     void update(float*, const int) noexcept;
     void setEffectType(const int, const double, const double) noexcept;
     void calculateDelayOffset(const int ch) noexcept;
@@ -27,42 +27,42 @@ public:
     void toggleQuadPhase(bool) noexcept;
 };
 
-inline void ModFilter::setDryWet(const float dw) noexcept
+inline void Modulation::setDryWet(const float dw) noexcept
 {
     m_pDelay->setDryWet(dw);
 }
 
-inline void ModFilter::setFeedback(const float fb) noexcept
+inline void Modulation::setFeedback(const float fb) noexcept
 {
     m_pDelay->setFeedback(fb);
 }
 
-inline void ModFilter::setWaveform(const int wf) noexcept
+inline void Modulation::setWaveform(const int wf) noexcept
 {
     m_pLFO->changeWaveform(wf);
 }
 
-inline void ModFilter::setLfoFreq(const double f) noexcept
+inline void Modulation::setLfoFreq(const double f) noexcept
 {
     m_pLFO->changeFreq(f);
 }
 
-inline void ModFilter::setChorOffset(const double chrsOffst) noexcept
+inline void Modulation::setChorOffset(const double chrsOffst) noexcept
 {
     m_chorusOffset = static_cast<float>(chrsOffst);
 }
 
-inline void ModFilter::setModDepth(const double modDepth) noexcept
+inline void Modulation::setModDepth(const double modDepth) noexcept
 {
     m_modDepth = static_cast<float>(modDepth);
 }
 
-inline void ModFilter::toggleQuadPhase(bool onOff) noexcept
+inline void Modulation::toggleQuadPhase(bool onOff) noexcept
 {
     onOff ? m_pLFO->setQuadPhase() : m_pLFO->resetPhase();
 }
 
-inline void ModFilter::calculateDelayOffset(const int ch) noexcept
+inline void Modulation::calculateDelayOffset(const int ch) noexcept
 {
     float lfoSampleVal = 0.0f;
     m_pLFO->generateUnipolar(&lfoSampleVal, ch);
