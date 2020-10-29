@@ -4,7 +4,7 @@
 #include "delay.h"
 #include "WT_Osc.h"
 
-enum FxType {FLANGER, VIBRATO, CHORUS};
+enum FxType {FLANGER, CHORUS, VIBRATO};
 union F_I_32 {float f; int32_t i;};
 
 class Modulation
